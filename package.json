@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "lint:fix": "prettier src eslint.config.js --write && eslint src --fix"
+    "lint:fix": "prettier src eslint.config.js src-tauri/migrations --write && eslint src --fix"
   },
   "dependencies": {
     "@tauri-apps/api": "^1",
@@ -27,6 +27,7 @@
     "eslint-plugin-react": "^7.35.0",
     "globals": "^15.9.0",
     "prettier": "3.3.3",
+    "prettier-plugin-sql": "^0.18.1",
     "tailwindcss": "^3.4.9",
     "typescript": "^5.2.2",
     "typescript-eslint": "^8.0.1",
