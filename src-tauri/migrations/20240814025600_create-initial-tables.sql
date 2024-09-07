@@ -1,29 +1,29 @@
 -- Add migration script here
 CREATE TABLE Albums (
-  AlbumId INTEGER PRIMARY KEY,
-  Title TEXT,
-  AlbumArtist TEXT,
-  AlbumArtPath TEXT
+  album_id INTEGER PRIMARY KEY,
+  title TEXT,
+  album_artist TEXT,
+  album_art_path TEXT
 ) STRICT;
 
 CREATE TABLE Discs (
-  DiscId INTEGER PRIMARY KEY,
-  DiscNum INTEGER,
-  DiscTitle TEXT,
-  DiscArtPath TEXT,
-  Album INTEGER,
-  FOREIGN KEY (Album) REFERENCES Albums (AlbumId)
+  disc_id INTEGER PRIMARY KEY,
+  disc_num INTEGER,
+  disc_title TEXT,
+  disc_art_path TEXT,
+  album INTEGER,
+  FOREIGN KEY (album) REFERENCES Albums (album_id)
 ) STRICT;
 
 CREATE TABLE Tracks (
-  TrackId INTEGER PRIMARY KEY,
-  TrackNum INTEGER,
-  TrackTitle TEXT,
-  TrackArtPath TEXT,
-  Artist TEXT,
-  TrackPath TEXT,
-  Album INTEGER,
-  Disc INTEGER,
-  FOREIGN KEY (Album) REFERENCES Albums (AlbumId),
-  FOREIGN KEY (Disc) REFERENCES Discs (DiscId)
+  track_id INTEGER PRIMARY KEY,
+  track_num INTEGER,
+  track_title TEXT,
+  track_art_path TEXT,
+  artist TEXT,
+  track_path TEXT,
+  album INTEGER,
+  disc INTEGER,
+  FOREIGN KEY (album) REFERENCES Albums (album_id),
+  FOREIGN KEY (disc) REFERENCES Discs (disc_id)
 ) STRICT;

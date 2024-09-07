@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/tauri';
 import React, { useState } from 'react';
 
 import './App.css';
+import { Controls } from './Controls';
 import reactLogo from './assets/react.svg';
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
       </form>
 
       <p>{greetMsg}</p>
+      <Controls />
     </div>
   );
 }
