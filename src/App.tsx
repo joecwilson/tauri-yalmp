@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import './App.css';
 import { Controls } from './Controls';
@@ -48,7 +48,12 @@ function App() {
       </form>
 
       <p>{greetMsg}</p>
-      <Controls />
+      <Controls
+        songs={[
+          '/home/joseph/Music/Humankind/1-01-Humankind (Main Title).mp3',
+          '/home/joseph/Music/Humankind/1-02-Oracles.mp3',
+        ]}
+      />
     </div>
   );
 }

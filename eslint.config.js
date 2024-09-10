@@ -13,6 +13,8 @@ export default [
     rules: {
       'no-unused-vars': 'error',
       'no-undef': 'error',
+      'react/jsx-uses-react': 'off',
+      'react/react-in-jsx-scope': 'off',
     },
     settings: {
       react: {

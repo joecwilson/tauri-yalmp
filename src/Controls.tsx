@@ -1,29 +1,46 @@
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { Howl } from 'howler';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-export const Controls = () => {
-  const [currentTrack, setCurrentTrack] = useState(
-    '/home/joseph/Music/Humankind/1-08-Signs.mp3',
-  );
-  const [playing, setPlaying] = useState(getHowl(currentTrack));
-  const [duration, setDuration] = useState(0);
-  const [seekTime, setSeekTime] = useState(0);
+interface playlistProps {
+  songs: string[];
+}
+
+export const Controls = ({ songs }: playlistProps) => {
+  const [currentPos, setCurrentPos] = useState<number>(getStartingPos());
+  const [playing, setPlaying] = useState<Howl>(getHowl(songs[currentPos]));
+  const [duration, setDuration] = useState<number>(0);
+  const [seekTime, setSeekTime] = useState<number>(0);
+
+  function getStartingPos(): number {
+    if (songs.length === 0) {
+      throw new Error('Empty Songs given');
+    }
+    return 0;
+  }
 
   useEffect(() => {
     setInterval(() => {
       setSeekTime(playing.seek());
       setDuration(playing.duration());
     }, 1000);
+
+    playing.on('end', () => {
+      playNextSong();
+    });
   }, []);
 
-  function getAudioUrl(track_file: string) {
-    return convertFileSrc(track_file);
+  function playNextSong() {
+    if (currentPos === songs.length) {
+      return;
+    }
+    setCurrentPos(currentPos + 1);
+    setPlaying(getHowl(songs[currentPos]));
+    playSong();
   }
 
   function getHowl(track: string): Howl {
-    const assetUrl = getAudioUrl(track);
-    console.log(assetUrl);
+    const assetUrl = convertFileSrc(track);
     return new Howl({
       src: [assetUrl],
     });
