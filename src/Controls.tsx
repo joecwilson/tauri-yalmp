@@ -4,10 +4,8 @@ import React from 'react';
 
 export const Controls = () => {
   const currentTrack = '/home/joseph/Music/Humankind/1-08-Signs.mp3';
-  //   playAudio();
 
   function getAudioUrl(track_file: string) {
-    // return "asset://" + track_file;
     return convertFileSrc(track_file);
   }
 
