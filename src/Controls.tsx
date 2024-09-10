@@ -7,8 +7,8 @@ interface playlistProps {
 }
 
 export const Controls = ({ songs }: playlistProps) => {
-  const [currentPos, setCurrentPos] = useState<number>(getStartingPos());
-  const [playing, setPlaying] = useState<Howl>(getHowl(songs[currentPos]));
+  const [currentPos, setCurrentPos] = useState<number>(() =>  getStartingPos());
+  const [playing, setPlaying] = useState<Howl>(() =>  getHowl(songs[0]));
   const [duration, setDuration] = useState<number>(0);
   const [seekTime, setSeekTime] = useState<number>(0);
 
@@ -25,7 +25,7 @@ export const Controls = ({ songs }: playlistProps) => {
       setDuration(playing.duration());
     }, 1000);
 
-    playing.on('end', () => {
+    playing.once('end', () => {
       playNextSong();
     });
   }, []);
@@ -34,27 +34,33 @@ export const Controls = ({ songs }: playlistProps) => {
     if (currentPos === songs.length) {
       return;
     }
-    setCurrentPos(currentPos + 1);
-    setPlaying(getHowl(songs[currentPos]));
-    playSong();
+    console.log("Starting currentPos = ", currentPos);
+    setCurrentPos((prevPos) => prevPos + 1);
+    console.log("after updating currentPos = ", currentPos + 1);
+    const newHowl = getHowl(songs[currentPos + 1]);
+    setPlaying(newHowl);
+    playSong(newHowl);
+
+    newHowl.once('end', () => {
+    playNextSong();
+    });
   }
 
   function getHowl(track: string): Howl {
+    console.log("Song to play is", track);
     const assetUrl = convertFileSrc(track);
     return new Howl({
       src: [assetUrl],
     });
   }
 
-  function playSong() {
-    console.log(playing);
-    playing.play();
+  function playSong(currentHowl: Howl) {
+    console.log(currentHowl);
+    currentHowl.play();
   }
 
-  function pauseSong() {
-    console.log(playing);
-    console.log(playing.seek());
-    playing.pause();
+  function pauseSong(currentHowl: Howl) {
+    currentHowl.pause();
   }
 
   function renderSeekTimeDuration() {
@@ -72,8 +78,8 @@ export const Controls = ({ songs }: playlistProps) => {
 
   return (
     <div>
-      <button onClick={() => playSong()}>Play</button>
-      <button onClick={() => pauseSong()}>Pause</button>
+      <button onClick={() => playSong(playing)}>Play</button>
+      <button onClick={() => pauseSong(playing)}>Pause</button>
       {renderSeekTimeDuration()}
     </div>
   );
