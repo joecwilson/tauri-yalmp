@@ -21,9 +21,6 @@ export const Controls = () => {
 
   return (
     <div>
-      <audio src={getAudioUrl(currentTrack)} controls>
-        The audio tag is not supported here
-      </audio>
       <button onClick={() => playAudio()}></button>
     </div>
   );
