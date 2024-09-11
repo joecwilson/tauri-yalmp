@@ -7,8 +7,8 @@ interface playlistProps {
 }
 
 export const Controls = ({ songs }: playlistProps) => {
-  const [currentPos, setCurrentPos] = useState<number>(() =>  getStartingPos());
-  const [playing, setPlaying] = useState<Howl>(() =>  getHowl(songs[0]));
+  const [currentPos, setCurrentPos] = useState<number>(() => getStartingPos());
+  const [playing, setPlaying] = useState<Howl>(() => getHowl(songs[0]));
   const [duration, setDuration] = useState<number>(0);
   const [seekTime, setSeekTime] = useState<number>(0);
 
@@ -24,6 +24,7 @@ export const Controls = ({ songs }: playlistProps) => {
       setSeekTime(playing.seek());
       setDuration(playing.duration());
     }, 1000);
+    // TODO ^ needs to be updated to remove interval on interval changing
 
     playing.once('end', () => {
       playNextSong();
@@ -34,33 +35,38 @@ export const Controls = ({ songs }: playlistProps) => {
     if (currentPos === songs.length) {
       return;
     }
-    console.log("Starting currentPos = ", currentPos);
-    setCurrentPos((prevPos) => prevPos + 1);
-    console.log("after updating currentPos = ", currentPos + 1);
+    setCurrentPos(currentPos + 1);
+  }
+
+  useEffect(() => {
+    if (currentPos === 0) {
+      return;
+    }
     const newHowl = getHowl(songs[currentPos + 1]);
     setPlaying(newHowl);
     playSong(newHowl);
 
+
     newHowl.once('end', () => {
-    playNextSong();
+      playNextSong();
     });
-  }
+  }, [currentPos]);
 
   function getHowl(track: string): Howl {
-    console.log("Song to play is", track);
+    console.log('Song to play is', track);
     const assetUrl = convertFileSrc(track);
     return new Howl({
       src: [assetUrl],
     });
   }
 
-  function playSong(currentHowl: Howl) {
-    console.log(currentHowl);
-    currentHowl.play();
+  function playSong(curHowl: Howl) {
+    console.log(curHowl);
+    curHowl.play();
   }
 
-  function pauseSong(currentHowl: Howl) {
-    currentHowl.pause();
+  function pauseSong() {
+    playing.pause();
   }
 
   function renderSeekTimeDuration() {
@@ -79,7 +85,7 @@ export const Controls = ({ songs }: playlistProps) => {
   return (
     <div>
       <button onClick={() => playSong(playing)}>Play</button>
-      <button onClick={() => pauseSong(playing)}>Pause</button>
+      <button onClick={() => pauseSong()}>Pause</button>
       {renderSeekTimeDuration()}
     </div>
   );
