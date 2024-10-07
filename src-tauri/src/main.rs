@@ -2,13 +2,20 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::path::Path;
+use std::sync::Mutex;
 
-use scan::scan;
+use crate::app_state::AppState;
+use crate::app_state::InteriorAppState;
+use crate::playlist::load_playlist;
+use crate::scan::scan;
 use sqlx::pool::PoolOptions;
 use sqlx::SqlitePool;
+use tauri::async_runtime::block_on;
 use tauri::Manager;
 use tokio::fs::OpenOptions;
 
+mod app_state;
+mod playlist;
 mod scan;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -48,10 +55,10 @@ struct TrackSql {
 
 #[tauri::command]
 async fn get_albums(state: tauri::State<'_, AppState>) -> Result<Vec<AlbumSql>, String> {
-    let db = &state.db;
-    let albums = sqlx::query_as::<_, AlbumSql>("SELECT * from Albums")
-        .fetch_all(db)
-        .await
+    let guard = &state.state.lock().unwrap();
+    let db = &guard.db;
+    let albums = block_on(sqlx::query_as::<_, AlbumSql>("SELECT * from Albums").fetch_all(db))
+        // .await
         .map_err(|e| format!("Failed to get albums {e}"))?;
     return Ok(albums);
 }
@@ -67,35 +74,34 @@ async fn get_discs(
     state: tauri::State<'_, AppState>,
     album_id: i64,
 ) -> Result<Vec<DiscTs>, String> {
-    let db = &state.db;
-    let discs = sqlx::query_as::<_, DiscSql>("SELECT * from Discs WHERE album = ?1")
-        .bind(album_id)
-        .fetch_all(db)
-        .await
-        .map_err(|e| format!("Failed to get discs {e}"))?;
+    let guard = &state.state.lock().unwrap();
+    let db = &guard.db;
+    let discs = block_on(
+        sqlx::query_as::<_, DiscSql>("SELECT * from Discs WHERE album = ?1")
+            .bind(album_id)
+            .fetch_all(db),
+    )
+    .map_err(|e| format!("Failed to get discs {e}"))?;
 
     let mut result: Vec<DiscTs> = Vec::new();
 
     for disc in discs {
-        let tracks = sqlx::query_as::<_, TrackSql>("SELECT * from Tracks WHERE disc = ?1")
-            .bind(disc.disc_id)
-            .fetch_all(db)
-            .await
-            .map_err(|e| format!("Failed to get tracks for disc {e}"))?;
-        result.push(DiscTs {
-            disc: disc,
-            tracks: tracks,
-        });
+        let tracks = block_on(
+            sqlx::query_as::<_, TrackSql>("SELECT * from Tracks WHERE disc = ?1")
+                .bind(disc.disc_id)
+                .fetch_all(db),
+        )
+        .map_err(|e| format!("Failed to get tracks for disc {e}"))?;
+        result.push(DiscTs { disc, tracks });
     }
     return Ok(result);
 }
 
 #[tauri::command]
 async fn get_tracks(state: tauri::State<'_, AppState>) -> Result<Vec<TrackSql>, String> {
-    let db = &state.db;
-    let tracks = sqlx::query_as::<_, TrackSql>("SELECT * from Tracks")
-        .fetch_all(db)
-        .await
+    let guard = &state.state.lock().unwrap();
+    let db = &guard.db;
+    let tracks = block_on(sqlx::query_as::<_, TrackSql>("SELECT * from Tracks").fetch_all(db))
         .map_err(|e| format!("Failed to get tracks {e}"))?;
     return Ok(tracks);
 }
@@ -123,7 +129,7 @@ async fn setup_db(app: &tauri::App) -> SqlitePool {
         Err(err) => match err.kind() {
             std::io::ErrorKind::AlreadyExists => println!("database file already exists"),
             _ => {
-                panic!("error creating databse file {}", err);
+                panic!("error creating database file {}", err);
             }
         },
     }
@@ -141,19 +147,25 @@ async fn setup_db(app: &tauri::App) -> SqlitePool {
     return db;
 }
 
-struct AppState {
-    db: SqlitePool,
-}
-
 #[tokio::main]
 async fn main() {
     let app = tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            greet, get_albums, get_discs, get_tracks
+            greet,
+            get_albums,
+            get_discs,
+            get_tracks,
+            load_playlist
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
     let db = setup_db(&app).await;
-    app.manage(AppState { db });
+    let interior_app_state = InteriorAppState {
+        db,
+        current_playlist: Vec::new(),
+        current_playlist_idx: 0,
+    };
+    let state = Mutex::new(interior_app_state);
+    app.manage(AppState { state });
     app.run(|_, _| {});
 }
