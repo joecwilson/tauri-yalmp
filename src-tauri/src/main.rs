@@ -4,9 +4,8 @@
 use std::path::Path;
 use std::sync::Mutex;
 
-use crate::app_state::AppState;
-use crate::app_state::InteriorAppState;
-use crate::playlist::load_playlist;
+use crate::app_state::{AppState, InteriorAppState};
+use crate::playlist::{load_playlist, set_playlist_idx};
 use crate::scan::scan;
 use sqlx::pool::PoolOptions;
 use sqlx::SqlitePool;
@@ -155,7 +154,8 @@ async fn main() {
             get_albums,
             get_discs,
             get_tracks,
-            load_playlist
+            load_playlist,
+            set_playlist_idx,
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
