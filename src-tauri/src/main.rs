@@ -6,7 +6,9 @@ use std::sync::Mutex;
 
 use crate::app_state::{AppState, InteriorAppState};
 use crate::playlist::{load_playlist, set_playlist_idx};
+use crate::play::play_current_idx;
 use crate::scan::scan;
+use rodio::Sink;
 use sqlx::pool::PoolOptions;
 use sqlx::SqlitePool;
 use tauri::async_runtime::block_on;
@@ -14,8 +16,10 @@ use tauri::Manager;
 use tokio::fs::OpenOptions;
 
 mod app_state;
+mod play;
 mod playlist;
 mod scan;
+mod cpal;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -57,7 +61,6 @@ async fn get_albums(state: tauri::State<'_, AppState>) -> Result<Vec<AlbumSql>, 
     let guard = &state.state.lock().unwrap();
     let db = &guard.db;
     let albums = block_on(sqlx::query_as::<_, AlbumSql>("SELECT * from Albums").fetch_all(db))
-        // .await
         .map_err(|e| format!("Failed to get albums {e}"))?;
     return Ok(albums);
 }
@@ -156,14 +159,19 @@ async fn main() {
             get_tracks,
             load_playlist,
             set_playlist_idx,
+            play_current_idx,
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
     let db = setup_db(&app).await;
+    let (sink, _queues) = Sink::new_idle();
     let interior_app_state = InteriorAppState {
         db,
         current_playlist: Vec::new(),
         current_playlist_idx: 0,
+        current_sink: sink,
+         current_sink_output_stream: None,
+         current_sink_output_handle: None,
     };
     let state = Mutex::new(interior_app_state);
     app.manage(AppState { state });

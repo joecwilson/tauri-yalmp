@@ -90,8 +90,7 @@ async fn add_album_to_db(album: &Path, pool: &SqlitePool) -> anyhow::Result<()> 
     for disc in &album_contents.discs {
         let disc_path = Path::new(&disc);
         let _ = add_disc_to_db(&disc_path, id, disc_counter, pool)
-            .await
-            .unwrap();
+            .await?;
         disc_counter += 1;
     }
     println!("{album_contents:?}");
@@ -129,8 +128,7 @@ async fn add_disc_to_db(
     for track in &disc_contents.tracks {
         let track_path = Path::new(&track);
         let _ = add_track_to_db(&track_path, album_id, id, track_num, pool)
-            .await
-            .unwrap();
+            .await?;
         track_num += 1;
     }
     return Ok(());
@@ -143,7 +141,7 @@ async fn add_track_to_db(
     track_num: i32,
     pool: &SqlitePool,
 ) -> anyhow::Result<()> {
-    let json_contents = fs::read_to_string(track).unwrap();
+    let json_contents = fs::read_to_string(track)?;
     let track_contents: TrackJson = serde_json::from_str(&json_contents).unwrap();
 
     let mut conn = pool.acquire().await?;
