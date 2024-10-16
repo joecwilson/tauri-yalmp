@@ -15,7 +15,6 @@ struct AlbumJson {
 
 #[derive(Serialize, Deserialize, Debug)]
 struct DiscJson {
-    album: String,
     tracks: Vec<String>,
     name: Option<String>,
     art: Option<String>,
@@ -25,8 +24,6 @@ struct DiscJson {
 #[derive(Serialize, Deserialize, Debug)]
 struct TrackJson {
     title: String,
-    album: String,
-    disc: String,
     path: String,
     art: Option<String>,
     artist: Option<String>,
