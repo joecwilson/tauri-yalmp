@@ -5,8 +5,8 @@ use std::path::Path;
 use std::sync::Mutex;
 
 use crate::app_state::{AppState, InteriorAppState};
-use crate::playlist::{load_playlist, set_playlist_idx};
 use crate::play::play_current_idx;
+use crate::playlist::{load_playlist, set_playlist_idx};
 use crate::scan::scan;
 use rodio::Sink;
 use sqlx::pool::PoolOptions;
@@ -16,10 +16,10 @@ use tauri::Manager;
 use tokio::fs::OpenOptions;
 
 mod app_state;
+mod cpal;
 mod play;
 mod playlist;
 mod scan;
-mod cpal;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -140,7 +140,7 @@ async fn setup_db(app: &tauri::App) -> SqlitePool {
         .await
         .unwrap();
     sqlx::migrate!("./migrations").run(&db).await.unwrap();
-    let base_folder = Path::new("/home/joseph/Music/.YALMP/tags");
+    let base_folder = Path::new("/home/joseph/Music/.YALMP/albums.json");
     println!("Scanning started");
     if should_scan {
         let _ = scan(base_folder, &db).await;
@@ -170,8 +170,8 @@ async fn main() {
         current_playlist: Vec::new(),
         current_playlist_idx: 0,
         current_sink: sink,
-         current_sink_output_stream: None,
-         current_sink_output_handle: None,
+        current_sink_output_stream: None,
+        current_sink_output_handle: None,
     };
     let state = Mutex::new(interior_app_state);
     app.manage(AppState { state });

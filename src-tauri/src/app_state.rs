@@ -2,9 +2,8 @@ use rodio::{OutputStream, OutputStreamHandle, Sink};
 use sqlx::SqlitePool;
 use std::sync::Mutex;
 
-
 pub struct SendStream(pub OutputStream);
-unsafe impl Send for SendStream{}
+unsafe impl Send for SendStream {}
 
 pub struct InteriorAppState {
     pub db: SqlitePool,

@@ -40,24 +40,12 @@ struct TrackJson {
     synchronized_lyrics_path: Option<String>,
 }
 
-pub async fn scan(base_folder: &Path, pool: &SqlitePool) -> anyhow::Result<()> {
-    for file in fs::read_dir(base_folder).unwrap() {
-        let file = file.unwrap();
-        let path = file.path();
-        let mut dir_found = false;
-        if path.is_dir() {
-            for sub_file in fs::read_dir(&path)? {
-                let sub_file = sub_file?;
-                let sub_path = sub_file.path();
-                if sub_path.is_dir() {
-                    dir_found = true;
-                }
-            }
-            let _ = add_album_to_db(&path, pool).await;
-            if dir_found {
-                let _ = Box::pin(scan(&path, pool)).await?;
-            }
-        }
+pub async fn scan(albums_file: &Path, pool: &SqlitePool) -> anyhow::Result<()> {
+    let albums_string = fs::read_to_string(albums_file)?;
+    let album_vec: Vec<String> = serde_json::from_str(&albums_string)?;
+    for album in album_vec {
+        let album_path = Path::new(&album);
+        let _ = add_album_to_db(&album_path, pool).await?;
     }
     return Ok(());
 }
@@ -89,8 +77,7 @@ async fn add_album_to_db(album: &Path, pool: &SqlitePool) -> anyhow::Result<()> 
     let mut disc_counter = 1;
     for disc in &album_contents.discs {
         let disc_path = Path::new(&disc);
-        let _ = add_disc_to_db(&disc_path, id, disc_counter, pool)
-            .await?;
+        let _ = add_disc_to_db(&disc_path, id, disc_counter, pool).await?;
         disc_counter += 1;
     }
     println!("{album_contents:?}");
@@ -127,8 +114,7 @@ async fn add_disc_to_db(
     let mut track_num = 1;
     for track in &disc_contents.tracks {
         let track_path = Path::new(&track);
-        let _ = add_track_to_db(&track_path, album_id, id, track_num, pool)
-            .await?;
+        let _ = add_track_to_db(&track_path, album_id, id, track_num, pool).await?;
         track_num += 1;
     }
     return Ok(());

@@ -14,7 +14,8 @@ pub fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), String>
     // Decode that sound file into a source
     let source = Decoder::new(file).map_err(|_| format!("Failed to decode file"))?;
     let mut guard = state.state.lock().unwrap();
-    let new_sink = Sink::try_new(&stream_handle).map_err(|_| format!("Failed to create new audio sink"))?;
+    let new_sink =
+        Sink::try_new(&stream_handle).map_err(|_| format!("Failed to create new audio sink"))?;
     new_sink.append(source);
     let send_stream = SendStream(stream);
     guard.current_sink = new_sink;
@@ -23,11 +24,11 @@ pub fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), String>
     return Ok(());
 }
 
-fn get_current_song(state: &tauri::State<'_, AppState>) -> Result<String, String>{
+fn get_current_song(state: &tauri::State<'_, AppState>) -> Result<String, String> {
     let guard = &state.state.lock().unwrap();
     let current_song = guard.current_playlist.get(guard.current_playlist_idx);
     match current_song {
         None => return Err(format!("Invalid index for playlist")),
-        Some(p) => return Ok(p.clone())
+        Some(p) => return Ok(p.clone()),
     };
 }
