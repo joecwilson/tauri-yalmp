@@ -4,7 +4,7 @@ CREATE TABLE Albums (
   title TEXT,
   album_artist TEXT,
   album_art_path TEXT,
-  json_path TEXT,
+  json_path TEXT
 ) STRICT;
 
 CREATE TABLE Discs (

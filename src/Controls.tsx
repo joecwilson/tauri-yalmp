@@ -82,6 +82,7 @@ export const Controls = ({ songs }: playlistProps) => {
     );
   }
 
+
   return (
     <div>
       <button onClick={() => playSong(playing)}>Play</button>

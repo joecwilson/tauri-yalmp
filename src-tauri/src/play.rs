@@ -21,7 +21,15 @@ pub fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), String>
     guard.current_sink = new_sink;
     guard.current_sink_output_handle = Some(stream_handle);
     guard.current_sink_output_stream = Some(send_stream);
+    // new_sink.play();
+    // Need to spawn a new thread that sleeps till the end of the stream and plays a song
     return Ok(());
+}
+
+
+fn play_next_song_at_end(state: &tauri::State<'_, AppState>) {
+    
+    // Given a sink
 }
 
 fn get_current_song(state: &tauri::State<'_, AppState>) -> Result<String, String> {
