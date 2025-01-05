@@ -11,4 +11,4 @@ This template should help get you started developing with Tauri, React and Types
 - We use tailwind CSS  + daisyUI for css. To build css classes run
 `npx tailwindcss -i ./src/input.css -o ./src/output.css --watch`
 
-- It may be nessicaery to export `__NV_PRIME_RENDER_OFFLOAD=1`
+- It may be required to export `__NV_PRIME_RENDER_OFFLOAD=1`

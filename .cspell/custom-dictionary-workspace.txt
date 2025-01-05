@@ -1,0 +1,12 @@
+# Custom Dictionary Words
+tauri
+trivago
+vitejs
+daisyui
+vite
+ampproject
+esbuild
+yalmp
+rodio
+serde
+sqlx
