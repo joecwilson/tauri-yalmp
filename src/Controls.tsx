@@ -1,4 +1,4 @@
-import { convertFileSrc } from '@tauri-apps/api/tauri';
+import { convertFileSrc, invoke } from '@tauri-apps/api/tauri';
 import { Howl } from 'howler';
 import { useEffect, useState } from 'react';
 
@@ -11,6 +11,11 @@ export const Controls = ({ songs }: playlistProps) => {
   const [playing, setPlaying] = useState<Howl>(() => getHowl(songs[0]));
   const [duration, setDuration] = useState<number>(0);
   const [seekTime, setSeekTime] = useState<number>(0);
+
+
+  async function loadAllSongs() {
+    await invoke('get_tracks').then((message) => console.log(message));
+  }
 
   function getStartingPos(): number {
     if (songs.length === 0) {
@@ -69,6 +74,7 @@ export const Controls = ({ songs }: playlistProps) => {
     playing.pause();
   }
 
+
   function renderSeekTimeDuration() {
     if (!seekTime || !duration) {
       return;
@@ -86,8 +92,8 @@ export const Controls = ({ songs }: playlistProps) => {
   return (
     <div>
       <button onClick={() => playSong(playing)}>Play</button>
+      <button onClick={() => loadAllSongs()}>Load Songs</button>
       <button onClick={() => pauseSong()}>Pause</button>
-      {renderSeekTimeDuration()}
     </div>
   );
 };
