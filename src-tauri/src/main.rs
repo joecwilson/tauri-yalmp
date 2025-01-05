@@ -8,6 +8,7 @@ use crate::app_state::{AppState, InteriorAppState};
 use crate::play::play_current_idx;
 use crate::playlist::{load_playlist, set_playlist_idx};
 use crate::scan::scan;
+use dirs;
 use rodio::Sink;
 use sqlx::pool::PoolOptions;
 use sqlx::SqlitePool;
@@ -108,11 +109,8 @@ async fn get_tracks(state: tauri::State<'_, AppState>) -> Result<Vec<TrackSql>, 
     return Ok(tracks);
 }
 
-async fn setup_db(app: &tauri::App) -> SqlitePool {
-    let mut path = app
-        .path_resolver()
-        .app_data_dir()
-        .expect("could not get data_dir");
+async fn setup_db() -> SqlitePool {
+    let mut path = dirs::data_dir().unwrap();
     match std::fs::create_dir_all(path.clone()) {
         Ok(_) => {}
         Err(err) => {
@@ -164,7 +162,7 @@ async fn main() {
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
-    let db = setup_db(&app).await;
+    let db = setup_db().await;
     let (sink, _queues) = Sink::new_idle();
     let interior_app_state = InteriorAppState {
         db,
