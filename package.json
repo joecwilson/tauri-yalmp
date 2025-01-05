@@ -11,14 +11,15 @@
     "lint:fix": "prettier src eslint.config.js src-tauri/migrations --write && eslint src --fix"
   },
   "dependencies": {
-    "@tauri-apps/api": "^1.6.0",
+    "@tauri-apps/api": "^2.2.0",
+    "@tauri-apps/plugin-shell": "~2",
     "howler": "^2.2.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
-    "@tauri-apps/cli": "^1.6.3",
+    "@tauri-apps/cli": "^2.2.2",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/howler": "^2.2.12",
     "@types/react": "^18.3.18",

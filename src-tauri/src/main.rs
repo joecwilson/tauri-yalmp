@@ -152,6 +152,7 @@ async fn setup_db(app: &tauri::App) -> SqlitePool {
 #[tokio::main]
 async fn main() {
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             greet,
             get_albums,

@@ -27,11 +27,10 @@ pub fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), String>
     guard.current_sink.sleep_until_end();
     drop(guard);
     play_next_song_at_end(&state);
-    
+
     // Need to spawn a new thread that sleeps till the end of the stream and plays a song
     return Ok(());
 }
-
 
 fn play_next_song_at_end(_state: &tauri::State<'_, AppState>) {
     // let guard = state.state.lock().unwrap();
