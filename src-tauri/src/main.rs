@@ -55,7 +55,7 @@ struct TrackSql {
 }
 
 #[tauri::command]
-async fn get_albums(state: tauri::State<'_, AppState>) -> Result<Vec<AlbumSql>, String> {
+fn get_albums(state: tauri::State<'_, AppState>) -> Result<Vec<AlbumSql>, String> {
     let guard = &state.state.lock().unwrap();
     let db = &guard.db;
     let mut statement = db.prepare_cached("SELECT * from Albums").unwrap();
@@ -83,10 +83,7 @@ struct DiscTs {
 }
 
 #[tauri::command]
-async fn get_discs(
-    state: tauri::State<'_, AppState>,
-    album_id: i64,
-) -> Result<Vec<DiscTs>, String> {
+fn get_discs(state: tauri::State<'_, AppState>, album_id: i64) -> Result<Vec<DiscTs>, String> {
     let guard = &state.state.lock().unwrap();
     let db = &guard.db;
 
@@ -148,7 +145,7 @@ async fn get_discs(
 }
 
 #[tauri::command]
-async fn get_tracks(state: tauri::State<'_, AppState>) -> Result<Vec<TrackSql>, String> {
+fn get_tracks(state: tauri::State<'_, AppState>) -> Result<Vec<TrackSql>, String> {
     let guard = &state.state.lock().unwrap();
     let db = &guard.db;
     let mut statement = db.prepare_cached("SELECT * from Tracks").unwrap();
@@ -175,7 +172,7 @@ async fn get_tracks(state: tauri::State<'_, AppState>) -> Result<Vec<TrackSql>, 
     return Ok(track_list);
 }
 
-async fn setup_db() -> Connection {
+fn setup_db() -> Connection {
     let mut path = dirs::data_dir().unwrap();
     path.push("dev.josephwilson.yalmp");
     match std::fs::create_dir_all(path.clone()) {
@@ -185,7 +182,10 @@ async fn setup_db() -> Connection {
         }
     };
     path.push("db.sqlite");
-    let result = std::fs::OpenOptions::new().write(true).create_new(true).open(&path);
+    let result = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path);
     let mut should_scan = false;
     let conn = Connection::open(&path).unwrap();
     match result {
@@ -203,7 +203,7 @@ async fn setup_db() -> Connection {
     let base_folder = Path::new("/home/joseph/Music/.YALMP/albums.json");
     println!("Scanning started");
     if should_scan {
-        let _ = scan(base_folder, &conn).await;
+        let _ = scan(base_folder, &conn).unwrap();
     }
     println!("scanning complete");
     return conn;
@@ -224,7 +224,7 @@ async fn main() {
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
-    let db = setup_db().await;
+    let db = setup_db();
     let (sink, _queues) = Sink::new_idle();
     let interior_app_state = InteriorAppState {
         db,

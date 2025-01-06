@@ -37,21 +37,23 @@ struct TrackJson {
     synchronized_lyrics_path: Option<String>,
 }
 
-pub async fn scan(albums_file: &Path, conn: &Connection) -> anyhow::Result<()> {
-    conn.execute(include_str!("../migrations/create_album_table.sql"), ())?;
-    conn.execute(include_str!("../migrations/create_disc_table.sql"), ())?;
-    conn.execute(include_str!("../migrations/create_track_table.sql"), ())?;
-    let albums_string = fs::read_to_string(albums_file)?;
+pub fn scan(albums_file: &Path, conn: &Connection) -> anyhow::Result<()> {
+    conn.execute(include_str!("../migrations/create_album_table.sql"), ())
+        .unwrap();
+    conn.execute(include_str!("../migrations/create_disc_table.sql"), ())
+        .unwrap();
+    conn.execute(include_str!("../migrations/create_track_table.sql"), ())
+        .unwrap();
+    let albums_string = fs::read_to_string(albums_file).unwrap();
     let album_vec: Vec<String> = serde_json::from_str(&albums_string)?;
     for album in album_vec {
         let album_path = Path::new(&album);
-        let _ = add_album_to_db(&album_path, conn).await?;
+        let _ = add_album_to_db(&album_path, conn)?;
     }
     return Ok(());
 }
 
-async fn add_album_to_db(album: &Path, conn: &Connection) -> anyhow::Result<()> {
-    set_current_dir(album)?;
+fn add_album_to_db(album: &Path, conn: &Connection) -> anyhow::Result<()> {
     let json_contents = fs::read_to_string(album)?;
     let album_contents: AlbumJson = serde_json::from_str(&json_contents)?;
     let album_as_string = album.to_string_lossy();
@@ -72,14 +74,14 @@ async fn add_album_to_db(album: &Path, conn: &Connection) -> anyhow::Result<()> 
     let mut disc_counter = 1;
     for disc in &album_contents.discs {
         let disc_path = Path::new(&disc);
-        let _ = add_disc_to_db(&disc_path, id, disc_counter, conn).await?;
+        let _ = add_disc_to_db(&disc_path, id, disc_counter, conn)?;
         disc_counter += 1;
     }
     println!("{album_contents:?}");
     return Ok(());
 }
 
-async fn add_disc_to_db(
+fn add_disc_to_db(
     disc: &Path,
     album_id: i64,
     disc_num: i32,
@@ -108,13 +110,13 @@ async fn add_disc_to_db(
     let mut track_num = 1;
     for track in &disc_contents.tracks {
         let track_path = Path::new(&track);
-        let _ = add_track_to_db(&track_path, album_id, id, track_num, conn).await?;
+        let _ = add_track_to_db(&track_path, album_id, id, track_num, conn)?;
         track_num += 1;
     }
     return Ok(());
 }
 
-async fn add_track_to_db(
+fn add_track_to_db(
     track: &Path,
     album_id: i64,
     disc_id: i64,
@@ -127,7 +129,7 @@ async fn add_track_to_db(
 
     // let mut conn = pool.acquire().await?;
     conn.execute("INSERT into Tracks (track_num, track_title, track_art_path, artist, track_path, album, disc, json_path)
-    VALUES ( ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)", (&track_num, &track_contents.title, &track_contents.art, &track_contents.artist, &track_contents.path, &track_as_str, &album_id, &disc_id))?;
+    VALUES ( ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)", (&track_num, &track_contents.title, &track_contents.art, &track_contents.artist, &track_contents.path,  &album_id, &disc_id, &track_as_str)).unwrap();
 
     return Ok(());
 }
