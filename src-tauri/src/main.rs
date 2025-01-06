@@ -11,8 +11,6 @@ use crate::scan::scan;
 use dirs;
 use rodio::Sink;
 use rusqlite::{Connection, Result};
-use sqlx::pool::PoolOptions;
-use sqlx::SqlitePool;
 use tauri::Manager;
 use tokio::fs::OpenOptions;
 
@@ -174,8 +172,6 @@ async fn get_tracks(state: tauri::State<'_, AppState>) -> Result<Vec<TrackSql>, 
     for track in track_iterator {
         track_list.push(track.unwrap());
     }
-
-    drop(guard);
 
     return Ok(track_list);
 }

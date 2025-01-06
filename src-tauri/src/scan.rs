@@ -38,9 +38,9 @@ struct TrackJson {
 }
 
 pub async fn scan(albums_file: &Path, conn: &Connection) -> anyhow::Result<()> {
-    conn.execute(include_str!("../migrations/create_album_table.sql"), ());
-    conn.execute(include_str!("../migrations/create_disc_table.sql"), ());
-    conn.execute(include_str!("../migrations/create_track_table.sql"), ());
+    conn.execute(include_str!("../migrations/create_album_table.sql"), ())?;
+    conn.execute(include_str!("../migrations/create_disc_table.sql"), ())?;
+    conn.execute(include_str!("../migrations/create_track_table.sql"), ())?;
     let albums_string = fs::read_to_string(albums_file)?;
     let album_vec: Vec<String> = serde_json::from_str(&albums_string)?;
     for album in album_vec {

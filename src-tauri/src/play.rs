@@ -1,6 +1,5 @@
 use crate::app_state::{AppState, SendStream};
-use rodio::{source::Source, Decoder, OutputStream, Sink};
-use std::fmt::format;
+use rodio::{Decoder, OutputStream, Sink};
 use std::fs::File;
 use std::io::BufReader;
 
