@@ -10,9 +10,9 @@ use crate::playlist::{load_playlist, set_playlist_idx};
 use crate::scan::scan;
 use dirs;
 use rodio::Sink;
+use rusqlite::{Connection, Result};
 use sqlx::pool::PoolOptions;
 use sqlx::SqlitePool;
-use tauri::async_runtime::block_on;
 use tauri::Manager;
 use tokio::fs::OpenOptions;
 
@@ -61,9 +61,22 @@ struct TrackSql {
 async fn get_albums(state: tauri::State<'_, AppState>) -> Result<Vec<AlbumSql>, String> {
     let guard = &state.state.lock().unwrap();
     let db = &guard.db;
-    let albums = block_on(sqlx::query_as::<_, AlbumSql>("SELECT * from Albums").fetch_all(db))
-        .map_err(|e| format!("Failed to get albums {e}"))?;
-    return Ok(albums);
+    let mut statement = db.prepare_cached("SELECT * from Albums").unwrap();
+    let album_iterator = statement
+        .query_map([], |row| {
+            Ok(AlbumSql {
+                album_id: row.get(0)?,
+                title: row.get(1)?,
+                album_artist: row.get(2)?,
+                album_art_path: row.get(3)?,
+            })
+        })
+        .unwrap();
+    let mut all_albums = Vec::new();
+    for album in album_iterator {
+        all_albums.push(album.unwrap());
+    }
+    return Ok(all_albums);
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -79,23 +92,60 @@ async fn get_discs(
 ) -> Result<Vec<DiscTs>, String> {
     let guard = &state.state.lock().unwrap();
     let db = &guard.db;
-    let discs = block_on(
-        sqlx::query_as::<_, DiscSql>("SELECT * from Discs WHERE album = ?1")
-            .bind(album_id)
-            .fetch_all(db),
-    )
-    .map_err(|e| format!("Failed to get discs {e}"))?;
 
+    let mut disc_statement = db
+        .prepare_cached("SELECT * from Discs WHERE album = ?1")
+        .unwrap();
+
+    let disc_iterator = disc_statement
+        .query_map([album_id], |row| {
+            Ok(DiscSql {
+                disc_id: row.get(0)?,
+                disc_num: row.get(1)?,
+                disc_title: row.get(2)?,
+                disc_art_path: row.get(3)?,
+                album: row.get(5)?,
+            })
+        })
+        .unwrap();
     let mut result: Vec<DiscTs> = Vec::new();
 
-    for disc in discs {
-        let tracks = block_on(
-            sqlx::query_as::<_, TrackSql>("SELECT * from Tracks WHERE disc = ?1")
-                .bind(disc.disc_id)
-                .fetch_all(db),
-        )
-        .map_err(|e| format!("Failed to get tracks for disc {e}"))?;
-        result.push(DiscTs { disc, tracks });
+    let mut track_statement = db
+        .prepare_cached("SELECT * from Tracks WHERE disc = ?1")
+        .unwrap();
+
+    for disc in disc_iterator {
+        let unwrapped_disc = disc.unwrap();
+        let track_iterator = track_statement
+            .query_map([unwrapped_disc.disc_id], |row| {
+                Ok(TrackSql {
+                    track_id: row.get(0)?,
+                    track_num: row.get(1)?,
+                    track_title: row.get(2)?,
+                    track_art_path: row.get(3)?,
+                    artist: row.get(4)?,
+                    track_path: row.get(5)?,
+                    album: row.get(7)?,
+                    disc: row.get(8)?,
+                })
+            })
+            .unwrap();
+        let mut track_list: Vec<TrackSql> = Vec::new();
+        for track in track_iterator {
+            track_list.push(track.unwrap());
+        }
+        result.push(DiscTs {
+            disc: (unwrapped_disc),
+            tracks: (track_list),
+        })
+
+        // let tracks = block_on(
+        //     sqlx::query_as::<_, TrackSql>("SELECT * from Tracks WHERE disc = ?1")
+        //         .bind(disc.disc_id)
+        //         .fetch_all(db),
+        // )
+        // .map_err(|e| format!("Failed to get tracks for disc {e}"))?;
+        // result.push(DiscTs { disc, tracks });
     }
     return Ok(result);
 }
@@ -104,12 +154,33 @@ async fn get_discs(
 async fn get_tracks(state: tauri::State<'_, AppState>) -> Result<Vec<TrackSql>, String> {
     let guard = &state.state.lock().unwrap();
     let db = &guard.db;
-    let tracks = block_on(sqlx::query_as::<_, TrackSql>("SELECT * from Tracks").fetch_all(db))
-        .map_err(|e| format!("Failed to get tracks {e}"))?;
-    return Ok(tracks);
+    let mut statement = db.prepare_cached("SELECT * from Tracks").unwrap();
+
+    let track_iterator = statement
+        .query_map([], |row| {
+            Ok(TrackSql {
+                track_id: row.get(0)?,
+                track_num: row.get(1)?,
+                track_title: row.get(2)?,
+                track_art_path: row.get(3)?,
+                artist: row.get(4)?,
+                track_path: row.get(5)?,
+                album: row.get(7)?,
+                disc: row.get(8)?,
+            })
+        })
+        .unwrap();
+    let mut track_list: Vec<TrackSql> = Vec::new();
+    for track in track_iterator {
+        track_list.push(track.unwrap());
+    }
+
+    drop(guard);
+
+    return Ok(track_list);
 }
 
-async fn setup_db() -> SqlitePool {
+async fn setup_db() -> Connection {
     let mut path = dirs::data_dir().unwrap();
     match std::fs::create_dir_all(path.clone()) {
         Ok(_) => {}
@@ -121,6 +192,7 @@ async fn setup_db() -> SqlitePool {
     let mut options = OpenOptions::new();
     let result = options.create_new(true).write(true).open(&path);
     let mut should_scan = false;
+    let conn = Connection::open(&path).unwrap();
     match result.await {
         Ok(_) => {
             println!("database file created");
@@ -133,18 +205,13 @@ async fn setup_db() -> SqlitePool {
             }
         },
     }
-    let db = PoolOptions::new()
-        .connect(path.to_str().unwrap())
-        .await
-        .unwrap();
-    sqlx::migrate!("./migrations").run(&db).await.unwrap();
     let base_folder = Path::new("/home/joseph/Music/.YALMP/albums.json");
     println!("Scanning started");
     if should_scan {
-        let _ = scan(base_folder, &db).await;
+        let _ = scan(base_folder, &conn).await;
     }
     println!("scanning complete");
-    return db;
+    return conn;
 }
 
 #[tokio::main]

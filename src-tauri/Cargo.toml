@@ -20,7 +20,7 @@ anyhow = "1"
 rodio = "0.19"
 tauri-plugin-shell = "2"
 dirs = "5" 
-
+rusqlite = { version = "0.32.0", features = ["bundled"] }
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

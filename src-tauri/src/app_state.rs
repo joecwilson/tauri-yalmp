@@ -1,12 +1,12 @@
 use rodio::{OutputStream, OutputStreamHandle, Sink};
-use sqlx::SqlitePool;
+use rusqlite::Connection;
 use std::sync::Mutex;
 
 pub struct SendStream(pub OutputStream);
 unsafe impl Send for SendStream {}
 
 pub struct InteriorAppState {
-    pub db: SqlitePool,
+    pub db: Connection,
     pub current_playlist: Vec<String>,
     pub current_playlist_idx: usize,
     pub current_sink: Sink,
