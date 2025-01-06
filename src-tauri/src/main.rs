@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::path::Path;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 
 use crate::app_state::{AppState, InteriorAppState};
 use crate::play::play_current_idx;
@@ -54,8 +54,8 @@ struct TrackSql {
 }
 
 #[tauri::command]
-fn get_albums(state: tauri::State<'_, AppState>) -> Result<Vec<AlbumSql>, String> {
-    let guard = &state.state.lock().unwrap();
+async fn get_albums(state: tauri::State<'_, AppState>) -> Result<Vec<AlbumSql>, String> {
+    let guard = &state.state.lock().await;
     let db = &guard.db;
     let mut statement = db.prepare_cached("SELECT * from Albums").unwrap();
     let album_iterator = statement
@@ -82,8 +82,11 @@ struct DiscTs {
 }
 
 #[tauri::command]
-fn get_discs(state: tauri::State<'_, AppState>, album_id: i64) -> Result<Vec<DiscTs>, String> {
-    let guard = &state.state.lock().unwrap();
+async fn get_discs(
+    state: tauri::State<'_, AppState>,
+    album_id: i64,
+) -> Result<Vec<DiscTs>, String> {
+    let guard = &state.state.lock().await;
     let db = &guard.db;
 
     let mut disc_statement = db
@@ -136,8 +139,8 @@ fn get_discs(state: tauri::State<'_, AppState>, album_id: i64) -> Result<Vec<Dis
 }
 
 #[tauri::command]
-fn get_tracks(state: tauri::State<'_, AppState>) -> Result<Vec<TrackSql>, String> {
-    let guard = &state.state.lock().unwrap();
+async fn get_tracks(state: tauri::State<'_, AppState>) -> Result<Vec<TrackSql>, String> {
+    let guard = &state.state.lock().await;
     let db = &guard.db;
     let mut statement = db.prepare_cached("SELECT * from Tracks").unwrap();
 
@@ -224,6 +227,8 @@ async fn main() {
         current_sink: sink,
         current_sink_output_stream: None,
         current_sink_output_handle: None,
+        current_playing_counter: None,
+        requested_playing_counter: Some(0),
     };
     let state = Mutex::new(interior_app_state);
     app.manage(AppState { state });

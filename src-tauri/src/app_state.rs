@@ -1,6 +1,6 @@
 use rodio::{OutputStream, OutputStreamHandle, Sink};
 use rusqlite::Connection;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 
 pub struct SendStream(pub OutputStream);
 unsafe impl Send for SendStream {}
@@ -12,6 +12,8 @@ pub struct InteriorAppState {
     pub current_sink: Sink,
     pub current_sink_output_stream: Option<SendStream>,
     pub current_sink_output_handle: Option<OutputStreamHandle>,
+    pub current_playing_counter: Option<usize>,
+    pub requested_playing_counter: Option<usize>,
 }
 pub struct AppState {
     pub state: Mutex<InteriorAppState>,
