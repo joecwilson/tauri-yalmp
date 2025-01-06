@@ -48,15 +48,7 @@ function App() {
       </form>
 
       <p>{greetMsg}</p>
-      <Controls
-        songs={[
-          '/home/joseph/Music/Civilisation 5/Great Music/1-02-Brandenburg.mp3',
-          '/home/joseph/Music/Civilisation 5/Great Music/1-08-Hungarian Dance No 5.mp3',
-          '/home/joseph/Music/Homeworld 1 Remastered Original Soundtrack/01-08-Did Not Survive Interogation.flac',
-          '/home/joseph/Music/Humankind/1-01-Humankind (Main Title).mp3',
-          '/home/joseph/Music/Humankind/1-02-Oracles.mp3',
-        ]}
-      />
+      <Controls />
     </div>
   );
 }

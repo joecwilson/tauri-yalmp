@@ -19,6 +19,7 @@ pub fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), String>
     new_sink.append(source);
     let send_stream = SendStream(stream);
     guard.current_sink = new_sink;
+    guard.current_sink.set_volume(0.1);
     guard.current_sink_output_handle = Some(stream_handle);
     guard.current_sink_output_stream = Some(send_stream);
     // drop(guard)
