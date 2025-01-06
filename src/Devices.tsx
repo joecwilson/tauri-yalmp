@@ -5,9 +5,11 @@ export const Devices = () => {
   const [devices, setDevices] = useState<string[]>([]);
 
   async function get_devices_list() {
-    await invoke('list_devices').then((new_devices) =>
-      setDevices(new_devices as string[]),
-    );
+    console.log("get_devices_called");
+    await invoke('list_devices').then((new_devices) => {
+      console.log(new_devices);
+      setDevices(new_devices as string[]);
+    });
   }
 
   async function set_device(device: string) {

@@ -11,15 +11,7 @@ pub async fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), S
     // TODO: Move to main
     let mut guard = state.state.lock().await;
     let mut interval = time::interval(Duration::from_millis(10));
-    let (stream, stream_handle) =
-        OutputStream::try_default().map_err(|_| format!("Failed to open stream"))?;
-    let new_sink =
-        Sink::try_new(&stream_handle).map_err(|_| format!("Failed to create new audio sink"))?;
-    let send_stream = SendStream(stream);
-    guard.current_sink = new_sink;
-    guard.current_sink.set_volume(0.1);
-    guard.current_sink_output_handle = Some(stream_handle);
-    guard.current_sink_output_stream = Some(send_stream);
+ 
     let play_counter = guard.requested_playing_counter.unwrap() + 1;
     guard.requested_playing_counter = Some(play_counter);
     drop(guard);

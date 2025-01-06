@@ -228,7 +228,7 @@ async fn main() {
         OutputStream::try_default().map_err(|_| format!("Failed to open stream")).unwrap();
     let new_sink =
         Sink::try_new(&stream_handle).map_err(|_| format!("Failed to create new audio sink")).unwrap();
-
+    new_sink.set_volume(0.1);
     let send_stream = SendStream(stream);
     let interior_app_state = InteriorAppState {
         db,

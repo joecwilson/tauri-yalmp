@@ -42,9 +42,6 @@ export const Controls = () => {
   async function playSong() {
     await invoke('play_current_idx');
   }
-  async function listDevices() {
-    await invoke('list_devices');
-  }
 
   function pauseSong() {}
 
@@ -54,7 +51,6 @@ export const Controls = () => {
       <button onClick={() => loadAllSongs()}>Load Songs</button>
       <button onClick={() => loadFromAlbum(31)}>Load from Album</button>
       <button onClick={() => pauseSong()}>Pause</button>
-      <button onClick={() => listDevices()}>List Devices</button>
     </div>
   );
 };
