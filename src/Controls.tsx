@@ -1,97 +1,49 @@
-import { convertFileSrc, invoke } from '@tauri-apps/api/core';
-import { Howl } from 'howler';
-import { useEffect, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { useState } from 'react';
+import { Track } from './types';
 
 interface playlistProps {
   songs: string[];
 }
 
 export const Controls = ({ songs }: playlistProps) => {
-  const [currentPos, setCurrentPos] = useState<number>(() => getStartingPos());
-  const [playing, setPlaying] = useState<Howl>(() => getHowl(songs[0]));
-  const [duration, setDuration] = useState<number>(0);
-  const [seekTime, setSeekTime] = useState<number>(0);
+  const [playlist, setPlaylist] = useState<Track[]>([]);
+
+  function get_track_location(track: Track) {
+    return track.track_path;
+  }
+
+  function playlist_to_song_locations(tracks: Track[]) {
+    return tracks.map(get_track_location)
+  }
 
 
   async function loadAllSongs() {
-    await invoke('get_tracks').then((message) => console.log(message));
-  }
-
-  function getStartingPos(): number {
-    if (songs.length === 0) {
-      throw new Error('Empty Songs given');
-    }
-    return 0;
-  }
-
-  useEffect(() => {
-    setInterval(() => {
-      setSeekTime(playing.seek());
-      setDuration(playing.duration());
-    }, 1000);
-    // TODO ^ needs to be updated to remove interval on interval changing
-
-    playing.once('end', () => {
-      playNextSong();
+    let fake_binding: Track[] = []
+    await invoke('get_tracks').then((message) =>  {
+      setPlaylist(message as Track[]);
+      console.log("message is", message)
+      fake_binding = message as Track[]
     });
-  }, []);
-
-  function playNextSong() {
-    if (currentPos === songs.length) {
-      return;
-    }
-    setCurrentPos(currentPos + 1);
+    console.log("playlist is", fake_binding)
+    await invoke('load_playlist', {newPlaylist: playlist_to_song_locations(fake_binding)});
   }
 
-  useEffect(() => {
-    if (currentPos === 0) {
-      return;
-    }
-    const newHowl = getHowl(songs[currentPos + 1]);
-    setPlaying(newHowl);
-    playSong(newHowl);
 
-
-    newHowl.once('end', () => {
-      playNextSong();
-    });
-  }, [currentPos]);
-
-  function getHowl(track: string): Howl {
-    console.log('Song to play is', track);
-    const assetUrl = convertFileSrc(track);
-    return new Howl({
-      src: [assetUrl],
-    });
+  async function playSong() {
+    await invoke("play_current_idx");
   }
 
-  function playSong(curHowl: Howl) {
-    console.log(curHowl);
-    curHowl.play();
-  }
 
   function pauseSong() {
-    playing.pause();
   }
 
 
-  function renderSeekTimeDuration() {
-    if (!seekTime || !duration) {
-      return;
-    }
-
-    return (
-      <div>
-        <p>{seekTime ?? 0}</p>
-        <p>{duration ?? 0}</p>
-      </div>
-    );
-  }
 
 
   return (
     <div>
-      <button onClick={() => playSong(playing)}>Play</button>
+      <button onClick={() => playSong()}>Play</button>
       <button onClick={() => loadAllSongs()}>Load Songs</button>
       <button onClick={() => pauseSong()}>Pause</button>
     </div>

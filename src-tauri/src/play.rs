@@ -5,7 +5,8 @@ use std::io::BufReader;
 
 #[tauri::command]
 pub fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), String> {
-    let current_song = get_current_song(&state)?;
+    let current_song = get_current_song(&state).unwrap();
+    println!("current song is {current_song}");
     let (stream, stream_handle) =
         OutputStream::try_default().map_err(|_| format!("Failed to open stream"))?;
     let open_file = File::open(current_song).map_err(|_| format!("Failed to open file"))?;
