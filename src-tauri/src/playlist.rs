@@ -5,9 +5,7 @@ use crate::app_state::AppState;
 
 #[tauri::command]
 pub fn load_playlist(state: tauri::State<'_, AppState>, new_playlist: Vec<String>) {
-    println!("Load playlist called");
     let guard = &mut state.state.lock().unwrap();
-    println!("new_playlist was {new_playlist:#?}");
     guard.current_playlist = new_playlist;
     guard.current_playlist_idx = 0;
 }
