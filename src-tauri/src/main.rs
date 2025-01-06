@@ -1,21 +1,24 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use app_state::SendStream;
 use std::path::Path;
 use tokio::sync::Mutex;
 
 use crate::app_state::{AppState, InteriorAppState};
 use crate::play::play_current_idx;
 use crate::playlist::{load_playlist, set_playlist_idx};
+use crate::rodio_devices::{list_devices, switch_device};
 use crate::scan::scan;
 use dirs;
-use rodio::Sink;
+use rodio::{OutputStream, Sink};
 use rusqlite::{Connection, Result};
 use tauri::Manager;
 
 mod app_state;
 mod play;
 mod playlist;
+mod rodio_devices;
 mod scan;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -215,18 +218,25 @@ async fn main() {
             load_playlist,
             set_playlist_idx,
             play_current_idx,
+            list_devices,
+            switch_device,
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
     let db = setup_db();
-    let (sink, _queues) = Sink::new_idle();
+    let (stream, stream_handle) =
+        OutputStream::try_default().map_err(|_| format!("Failed to open stream")).unwrap();
+    let new_sink =
+        Sink::try_new(&stream_handle).map_err(|_| format!("Failed to create new audio sink")).unwrap();
+
+    let send_stream = SendStream(stream);
     let interior_app_state = InteriorAppState {
         db,
         current_playlist: Vec::new(),
         current_playlist_idx: 0,
-        current_sink: sink,
-        current_sink_output_stream: None,
-        current_sink_output_handle: None,
+        current_sink: new_sink,
+        current_sink_output_stream: Some(send_stream),
+        current_sink_output_handle: Some(stream_handle),
         current_playing_counter: None,
         requested_playing_counter: Some(0),
     };

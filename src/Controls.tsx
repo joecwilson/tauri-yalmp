@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Disc, Track } from './types';
 
 export const Controls = () => {
-  function get_track_location(track: Track) {
+  function get_track_location(track: Track): string {
     return track.track_path;
   }
 
@@ -42,6 +42,9 @@ export const Controls = () => {
   async function playSong() {
     await invoke('play_current_idx');
   }
+  async function listDevices() {
+    await invoke('list_devices');
+  }
 
   function pauseSong() {}
 
@@ -51,6 +54,7 @@ export const Controls = () => {
       <button onClick={() => loadAllSongs()}>Load Songs</button>
       <button onClick={() => loadFromAlbum(31)}>Load from Album</button>
       <button onClick={() => pauseSong()}>Pause</button>
+      <button onClick={() => listDevices()}>List Devices</button>
     </div>
   );
 };
