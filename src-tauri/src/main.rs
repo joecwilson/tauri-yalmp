@@ -12,7 +12,6 @@ use dirs;
 use rodio::Sink;
 use rusqlite::{Connection, Result};
 use tauri::Manager;
-use tokio::fs::OpenOptions;
 
 mod app_state;
 mod cpal;
@@ -178,6 +177,7 @@ async fn get_tracks(state: tauri::State<'_, AppState>) -> Result<Vec<TrackSql>, 
 
 async fn setup_db() -> Connection {
     let mut path = dirs::data_dir().unwrap();
+    path.push("dev.josephwilson.yalmp");
     match std::fs::create_dir_all(path.clone()) {
         Ok(_) => {}
         Err(err) => {
@@ -185,11 +185,10 @@ async fn setup_db() -> Connection {
         }
     };
     path.push("db.sqlite");
-    let mut options = OpenOptions::new();
-    let result = options.create_new(true).write(true).open(&path);
+    let result = std::fs::OpenOptions::new().write(true).create_new(true).open(&path);
     let mut should_scan = false;
     let conn = Connection::open(&path).unwrap();
-    match result.await {
+    match result {
         Ok(_) => {
             println!("database file created");
             should_scan = true;
