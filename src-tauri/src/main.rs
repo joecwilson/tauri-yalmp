@@ -14,7 +14,6 @@ use rusqlite::{Connection, Result};
 use tauri::Manager;
 
 mod app_state;
-mod cpal;
 mod play;
 mod playlist;
 mod scan;
@@ -25,7 +24,7 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, sqlx::FromRow)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct AlbumSql {
     album_id: i64,
     title: String,
@@ -33,7 +32,7 @@ struct AlbumSql {
     album_art_path: Option<String>,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, sqlx::FromRow)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct DiscSql {
     disc_id: i64,
     disc_num: i32,
@@ -42,7 +41,7 @@ struct DiscSql {
     album: i64,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, sqlx::FromRow)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct TrackSql {
     track_id: i64,
     track_num: i32,
@@ -132,14 +131,6 @@ fn get_discs(state: tauri::State<'_, AppState>, album_id: i64) -> Result<Vec<Dis
             disc: (unwrapped_disc),
             tracks: (track_list),
         })
-
-        // let tracks = block_on(
-        //     sqlx::query_as::<_, TrackSql>("SELECT * from Tracks WHERE disc = ?1")
-        //         .bind(disc.disc_id)
-        //         .fetch_all(db),
-        // )
-        // .map_err(|e| format!("Failed to get tracks for disc {e}"))?;
-        // result.push(DiscTs { disc, tracks });
     }
     return Ok(result);
 }

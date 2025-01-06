@@ -1,6 +1,6 @@
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
-use std::{env::set_current_dir, fs, path::Path};
+use std::{fs, path::Path};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct AlbumJson {
