@@ -28,8 +28,6 @@ pub async fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), S
     guard = state.state.lock().await;
     guard.current_sink.append(source);
     guard.current_sink.play();
-    let mut next_queued = false;
-    let mut prev_pos = Duration::MAX;
     drop(guard);
     loop {
         let mut guard = state.state.lock().await;
@@ -41,8 +39,8 @@ pub async fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), S
             guard.current_playing_counter = play_counter;
         }
         if guard.current_playing_counter == play_counter {
-            let current_pos = guard.current_sink.get_pos();
-            if !next_queued {
+            if guard.current_sink.len() <= 1 {
+                println!("Current length = {}", guard.current_sink.len());
                 if guard.current_playlist_idx + 1 < guard.current_playlist.len() {
                     guard.current_playlist_idx += 1;
                     current_song = guard
@@ -57,14 +55,7 @@ pub async fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), S
                     source = Decoder::new(file).map_err(|_| format!("Failed to decode file"))?;
                     guard.current_sink.append(source);
                 }
-                next_queued = true;
-                prev_pos = current_pos;
-            } else if next_queued {
-                if current_pos < prev_pos {
-                    next_queued = false;
-                }
-                prev_pos = current_pos;
-            }
+            } 
         }
         drop(guard);
         interval.tick().await;
