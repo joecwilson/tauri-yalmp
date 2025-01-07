@@ -2,6 +2,8 @@ use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::{fs, path::Path};
 
+use crate::app_state::AppState;
+
 #[derive(Serialize, Deserialize, Debug)]
 struct AlbumJson {
     name: String,
@@ -38,7 +40,27 @@ struct TrackJson {
     synchronized_lyrics_path: Option<String>,
 }
 
+#[tauri::command]
+pub async fn scan_command(state: tauri::State<'_, AppState>) -> Result<(), String> {
+
+    let mut base_folder = dirs::audio_dir().unwrap();
+    base_folder.push(".YALMP");
+    base_folder.push("albums.json");
+    println!("base folder is {:#?}", base_folder);
+    let guard = &state.state.lock().await;
+    let db = &guard.db;
+
+
+    scan(&base_folder, db).unwrap();
+    println!("Scanning done");
+    return Ok(());
+}
+
+
 pub fn scan(albums_file: &Path, conn: &Connection) -> anyhow::Result<()> {
+    conn.execute("DROP TABLE IF EXISTS Tracks", ()).unwrap();
+    conn.execute("DROP TABLE IF EXISTS Discs", ()).unwrap();
+    conn.execute("DROP TABLE IF EXISTS Albums", ()).unwrap();
     conn.execute(include_str!("../migrations/create_album_table.sql"), ())
         .unwrap();
     conn.execute(include_str!("../migrations/create_disc_table.sql"), ())

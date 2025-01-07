@@ -2,7 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use app_state::SendStream;
-use std::path::Path;
 use tokio::sync::Mutex;
 
 use crate::app_state::{AppState, InteriorAppState};
@@ -193,10 +192,12 @@ fn setup_db() -> Connection {
             }
         },
     }
-    let base_folder = Path::new("/home/joseph/Music/.YALMP/albums.json");
+    let mut base_folder = dirs::audio_dir().unwrap();
+    base_folder.push(".yalmp");
+    base_folder.push("albums.json");
     println!("Scanning started");
     if should_scan {
-        let _ = scan(base_folder, &conn).unwrap();
+        let _ = scan(&base_folder, &conn).unwrap();
     }
     println!("scanning complete");
     return conn;
@@ -217,7 +218,8 @@ async fn main() {
             switch_device,
             play::pause_song,
             play::get_current_location,
-            play::seek_song
+            play::seek_song,
+            scan::scan_command
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");

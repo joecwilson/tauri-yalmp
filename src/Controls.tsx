@@ -44,7 +44,10 @@ export const Controls = () => {
   }
 
   async function pauseSong() {
-    await invoke("pause_song");
+    await invoke('pause_song');
+  }
+  async function scan_music() {
+    await invoke('scan_command');
   }
 
   return (
@@ -53,6 +56,7 @@ export const Controls = () => {
       <button onClick={() => loadAllSongs()}>Load Songs</button>
       <button onClick={() => loadFromAlbum(31)}>Load from Album</button>
       <button onClick={() => pauseSong()}>Pause</button>
+      <button onClick={() => scan_music()}>Scan</button>
     </div>
   );
 };
