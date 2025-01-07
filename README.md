@@ -12,3 +12,9 @@ This template should help get you started developing with Tauri, React and Types
 `npx tailwindcss -i ./src/input.css -o ./src/output.css --watch`
 
 - It may be required to export `__NV_PRIME_RENDER_OFFLOAD=1`
+
+## Goals to be implemented
+
+- ability to seek
+- album views
+- ability to view playlist

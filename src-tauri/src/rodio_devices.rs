@@ -55,8 +55,9 @@ async fn switch_device_given_device(
 ) -> anyhow::Result<()> {
     let mut guard = state.state.lock().await;
     guard.current_sink.clear();
-    guard.current_playing_counter = None;
-    guard.requested_playing_counter = Some(0);
+    guard.current_playing_counter = 0;
+    guard.requested_playing_counter = 0;
+    guard.stopped = true;
 
     let (stream, stream_handle) = OutputStream::try_from_device(&device)?;
     let new_sink = Sink::try_new(&stream_handle)?;

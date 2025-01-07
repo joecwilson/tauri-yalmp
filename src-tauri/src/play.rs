@@ -8,10 +8,16 @@ use tokio::time::Duration;
 #[tauri::command]
 pub async fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), String> {
     let mut guard = state.state.lock().await;
+
+    if !guard.stopped {
+        guard.current_sink.play();
+        return Ok(());
+    }
+    guard.stopped = false;
     let mut interval = time::interval(Duration::from_millis(10));
 
-    let play_counter = guard.requested_playing_counter.unwrap() + 1;
-    guard.requested_playing_counter = Some(play_counter);
+    let play_counter = guard.requested_playing_counter + 1;
+    guard.requested_playing_counter = play_counter;
     drop(guard);
 
     let mut current_song = get_current_song(&state).await.unwrap();
@@ -27,17 +33,14 @@ pub async fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), S
     drop(guard);
     loop {
         let mut guard = state.state.lock().await;
-        if !guard
-            .requested_playing_counter
-            .is_some_and(|x| x == play_counter)
-        {
+        if !guard.requested_playing_counter == play_counter {
             drop(guard);
             break;
         }
-        if guard.current_playing_counter.is_none() {
-            guard.current_playing_counter = Some(play_counter);
+        if guard.current_playing_counter == 0 {
+            guard.current_playing_counter = play_counter;
         }
-        if guard.current_playing_counter.unwrap() == play_counter {
+        if guard.current_playing_counter == play_counter {
             let current_pos = guard.current_sink.get_pos();
             if !next_queued {
                 if guard.current_playlist_idx + 1 < guard.current_playlist.len() {
@@ -52,7 +55,6 @@ pub async fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), S
                         File::open(&current_song).map_err(|_| format!("Failed to open file"))?;
                     file = BufReader::new(open_file);
                     source = Decoder::new(file).map_err(|_| format!("Failed to decode file"))?;
-                    // song_length = source.total_duration().expect("Songs to have a duration");
                     guard.current_sink.append(source);
                 }
                 next_queued = true;
@@ -71,6 +73,13 @@ pub async fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), S
     guard.current_sink.clear();
     guard.current_playing_counter = guard.requested_playing_counter;
 
+    return Ok(());
+}
+
+#[tauri::command]
+pub async fn pause_song(state: tauri::State<'_, AppState>) -> Result<(), String> {
+    let mut guard = state.state.lock().await;
+    guard.current_sink.pause();
     return Ok(());
 }
 

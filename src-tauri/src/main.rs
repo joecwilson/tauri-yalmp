@@ -6,7 +6,7 @@ use std::path::Path;
 use tokio::sync::Mutex;
 
 use crate::app_state::{AppState, InteriorAppState};
-use crate::play::play_current_idx;
+use crate::play::{pause_song, play_current_idx};
 use crate::playlist::{load_playlist, set_playlist_idx};
 use crate::rodio_devices::{list_devices, switch_device};
 use crate::scan::scan;
@@ -20,12 +20,6 @@ mod play;
 mod playlist;
 mod rodio_devices;
 mod scan;
-
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct AlbumSql {
@@ -211,7 +205,6 @@ async fn main() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
-            greet,
             get_albums,
             get_discs,
             get_tracks,
@@ -220,6 +213,7 @@ async fn main() {
             play_current_idx,
             list_devices,
             switch_device,
+            pause_song,
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -239,8 +233,9 @@ async fn main() {
         current_sink: new_sink,
         current_sink_output_stream: Some(send_stream),
         current_sink_output_handle: Some(stream_handle),
-        current_playing_counter: None,
-        requested_playing_counter: Some(0),
+        current_playing_counter: 0,
+        requested_playing_counter: 0,
+        stopped: true,
     };
     let state = Mutex::new(interior_app_state);
     app.manage(AppState { state });

@@ -43,7 +43,9 @@ export const Controls = () => {
     await invoke('play_current_idx');
   }
 
-  function pauseSong() {}
+  async function pauseSong() {
+    await invoke("pause_song");
+  }
 
   return (
     <div>
