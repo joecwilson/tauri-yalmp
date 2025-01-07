@@ -6,6 +6,7 @@ CREATE TABLE Tracks (
   artist TEXT,
   track_path TEXT,
   json_path TEXT,
+  duration INTEGER,
   album INTEGER,
   disc INTEGER,
   FOREIGN KEY (album) REFERENCES Albums (album_id),

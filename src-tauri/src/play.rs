@@ -78,8 +78,25 @@ pub async fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), S
 
 #[tauri::command]
 pub async fn pause_song(state: tauri::State<'_, AppState>) -> Result<(), String> {
-    let mut guard = state.state.lock().await;
+    let guard = state.state.lock().await;
     guard.current_sink.pause();
+    return Ok(());
+}
+
+#[tauri::command]
+pub async fn get_current_location(state: tauri::State<'_, AppState>) -> Result<u128, String> {
+    let guard = state.state.lock().await;
+    let time = guard.current_sink.get_pos();
+    return Ok(time.as_millis().try_into().unwrap());
+}
+
+#[tauri::command]
+pub async fn seek_song(state: tauri::State<'_, AppState>, milliseconds: u64) -> Result<(), String> {
+    let guard = state.state.lock().await;
+    guard
+        .current_sink
+        .try_seek(Duration::from_millis(milliseconds))
+        .map_err(|_| "Failed to seek to requested position")?;
     return Ok(());
 }
 

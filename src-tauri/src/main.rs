@@ -6,7 +6,6 @@ use std::path::Path;
 use tokio::sync::Mutex;
 
 use crate::app_state::{AppState, InteriorAppState};
-use crate::play::{pause_song, play_current_idx};
 use crate::playlist::{load_playlist, set_playlist_idx};
 use crate::rodio_devices::{list_devices, switch_device};
 use crate::scan::scan;
@@ -48,6 +47,7 @@ struct TrackSql {
     track_path: String,
     album: i64,
     disc: i64,
+    duration: i32,
 }
 
 #[tauri::command]
@@ -118,8 +118,9 @@ async fn get_discs(
                     track_art_path: row.get(3)?,
                     artist: row.get(4)?,
                     track_path: row.get(5)?,
-                    album: row.get(7)?,
-                    disc: row.get(8)?,
+                    duration: row.get(7)?,
+                    album: row.get(8)?,
+                    disc: row.get(9)?,
                 })
             })
             .unwrap();
@@ -150,8 +151,9 @@ async fn get_tracks(state: tauri::State<'_, AppState>) -> Result<Vec<TrackSql>, 
                 track_art_path: row.get(3)?,
                 artist: row.get(4)?,
                 track_path: row.get(5)?,
-                album: row.get(7)?,
-                disc: row.get(8)?,
+                duration: row.get(7)?,
+                album: row.get(8)?,
+                disc: row.get(9)?,
             })
         })
         .unwrap();
@@ -210,10 +212,12 @@ async fn main() {
             get_tracks,
             load_playlist,
             set_playlist_idx,
-            play_current_idx,
+            play::play_current_idx,
             list_devices,
             switch_device,
-            pause_song,
+            play::pause_song,
+            play::get_current_location,
+            play::seek_song
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application");

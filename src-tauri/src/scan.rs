@@ -25,6 +25,7 @@ struct DiscJson {
 struct TrackJson {
     title: String,
     path: String,
+    duration: i32,
     art: Option<String>,
     artist: Option<String>,
     composer: Option<String>,
@@ -128,8 +129,8 @@ fn add_track_to_db(
     let track_as_str = track.to_string_lossy();
 
     // let mut conn = pool.acquire().await?;
-    conn.execute("INSERT into Tracks (track_num, track_title, track_art_path, artist, track_path, album, disc, json_path)
-    VALUES ( ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)", (&track_num, &track_contents.title, &track_contents.art, &track_contents.artist, &track_contents.path,  &album_id, &disc_id, &track_as_str)).unwrap();
+    conn.execute("INSERT into Tracks (track_num, track_title, track_art_path, artist, track_path, album, disc, json_path, duration)
+    VALUES ( ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)", (&track_num, &track_contents.title, &track_contents.art, &track_contents.artist, &track_contents.path,  &album_id, &disc_id, &track_as_str, &track_contents.duration)).unwrap();
 
     return Ok(());
 }
