@@ -94,13 +94,13 @@ fn add_album_to_db(album: &Path, conn: &Connection) -> anyhow::Result<()> {
     )?;
     let id = conn.last_insert_rowid();
 
+    println!("{album_contents:?}");
     let mut disc_counter = 1;
     for disc in &album_contents.discs {
         let disc_path = Path::new(&disc);
         let _ = add_disc_to_db(&disc_path, id, disc_counter, conn)?;
         disc_counter += 1;
     }
-    println!("{album_contents:?}");
     return Ok(());
 }
 

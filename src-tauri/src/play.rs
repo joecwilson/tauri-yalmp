@@ -1,12 +1,23 @@
 use crate::app_state::AppState;
 use rodio::Decoder;
+use serde::Serialize;
+use tauri::{AppHandle, Manager, Emitter};
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, Read};
 use tokio::time;
 use tokio::time::Duration;
 
+
+#[derive(Clone, Serialize)]
+struct NewSong {
+  song_idx: usize,
+}
+
+
+
 #[tauri::command]
-pub async fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), String> {
+pub async fn play_current_idx(app: AppHandle) -> Result<(), String> {
+    let state = app.state::<AppState>();
     let mut guard = state.state.lock().await;
 
     if !guard.stopped {
@@ -40,7 +51,8 @@ pub async fn play_current_idx(state: tauri::State<'_, AppState>) -> Result<(), S
         }
         if guard.current_playing_counter == play_counter {
             if guard.current_sink.len() <= 1 {
-                println!("Current length = {}", guard.current_sink.len());
+                app.emit("new_song", NewSong {song_idx: guard.current_playlist_idx}).unwrap();
+                println!("Current length = {}, current_playlist_idx = {}", guard.current_sink.len(), guard.current_playlist_idx);
                 if guard.current_playlist_idx + 1 < guard.current_playlist.len() {
                     guard.current_playlist_idx += 1;
                     current_song = guard

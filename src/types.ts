@@ -22,9 +22,14 @@ export type Track = {
   track_path: string;
   album: number;
   disc: number;
+  duration: number;
 };
 
 export type Disc = {
   disc: DiscMetadata;
   tracks: Track[];
+};
+
+export type NewSong = {
+  song_idx: number;
 };
