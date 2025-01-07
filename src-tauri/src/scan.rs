@@ -42,7 +42,6 @@ struct TrackJson {
 
 #[tauri::command]
 pub async fn scan_command(state: tauri::State<'_, AppState>) -> Result<(), String> {
-
     let mut base_folder = dirs::audio_dir().unwrap();
     base_folder.push(".YALMP");
     base_folder.push("albums.json");
@@ -50,12 +49,10 @@ pub async fn scan_command(state: tauri::State<'_, AppState>) -> Result<(), Strin
     let guard = &state.state.lock().await;
     let db = &guard.db;
 
-
     scan(&base_folder, db).unwrap();
     println!("Scanning done");
     return Ok(());
 }
-
 
 pub fn scan(albums_file: &Path, conn: &Connection) -> anyhow::Result<()> {
     conn.execute("DROP TABLE IF EXISTS Tracks", ()).unwrap();

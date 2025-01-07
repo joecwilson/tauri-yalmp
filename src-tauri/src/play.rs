@@ -1,19 +1,16 @@
 use crate::app_state::AppState;
 use rodio::Decoder;
 use serde::Serialize;
-use tauri::{AppHandle, Manager, Emitter};
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::BufReader;
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::time;
 use tokio::time::Duration;
 
-
 #[derive(Clone, Serialize)]
 struct NewSong {
-  song_idx: usize,
+    song_idx: usize,
 }
-
-
 
 #[tauri::command]
 pub async fn play_current_idx(app: AppHandle) -> Result<(), String> {
@@ -51,8 +48,18 @@ pub async fn play_current_idx(app: AppHandle) -> Result<(), String> {
         }
         if guard.current_playing_counter == play_counter {
             if guard.current_sink.len() <= 1 {
-                app.emit("new_song", NewSong {song_idx: guard.current_playlist_idx}).unwrap();
-                println!("Current length = {}, current_playlist_idx = {}", guard.current_sink.len(), guard.current_playlist_idx);
+                app.emit(
+                    "new_song",
+                    NewSong {
+                        song_idx: guard.current_playlist_idx,
+                    },
+                )
+                .unwrap();
+                println!(
+                    "Current length = {}, current_playlist_idx = {}",
+                    guard.current_sink.len(),
+                    guard.current_playlist_idx
+                );
                 if guard.current_playlist_idx + 1 < guard.current_playlist.len() {
                     guard.current_playlist_idx += 1;
                     current_song = guard
@@ -67,7 +74,7 @@ pub async fn play_current_idx(app: AppHandle) -> Result<(), String> {
                     source = Decoder::new(file).map_err(|_| format!("Failed to decode file"))?;
                     guard.current_sink.append(source);
                 }
-            } 
+            }
         }
         drop(guard);
         interval.tick().await;
@@ -99,7 +106,7 @@ pub async fn seek_song(state: tauri::State<'_, AppState>, milliseconds: u64) -> 
     guard
         .current_sink
         .try_seek(Duration::from_millis(milliseconds))
-        .map_err(|_| "Failed to seek to requested position")?;
+        .map_err(|e| format!("Failed to seek to requested position {e}"))?;
     return Ok(());
 }
 

@@ -99,7 +99,7 @@ export const Controls = () => {
     <div>
       <button onClick={() => playSong()}>Play</button>
       <button onClick={() => loadAllSongs()}>Load Songs</button>
-      <button onClick={() => loadFromAlbum(60)}>Load from Album</button>
+      <button onClick={() => loadFromAlbum(2)}>Load from Album</button>
       <button onClick={() => pauseSong()}>Pause</button>
       <button onClick={() => scan_music()}>Scan</button>
       {renderSeekDuration()}
